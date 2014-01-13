@@ -1,0 +1,59 @@
+<?php
+/**
+ * Easy api builder module. Allows you to
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function easy_api() {
+  $items = array();
+
+  $items['api/get/%/%'] = array(
+    'title' => 'API GET request',
+    'type' => MENU_CALLBACK,
+    'description' => 'Handle get request.',
+    'page callback' => 'easy_api_get',
+    'page arguments' => array(2, 3),
+    'access callback' => TRUE
+  );
+
+  $items['api/post/%/%'] = array(
+    'title' => 'API POST request',
+    'type' => MENU_CALLBACK,
+    'description' => 'Handle post requests.',
+    'page callback' => 'easy_api_post',
+    'page arguments' => array(2, 3),
+    'access callback' => TRUE
+  );
+
+  // @TODO: Add DEL and PUT
+
+  return $items;
+}
+
+// @TODO: Create permissions for above
+// @TODO: Create docs
+// @TODO: Add optional caching
+// @TODO: Add access check functions (permissions per type, and session check)
+// @TODO: Optional callback for generating form token, or even forms
+
+/**
+ * Process the POSTed callback
+ */
+function _fundraiser_upsell_ajax_process($type = NULL, $id = NULL) {
+  $data = $_POST;
+  $output = '';
+  // Check the form token to be sure this is a valid callback
+  if (!drupal_valid_token($data['form_token'], $data['form_id'], TRUE)) {
+    watchdog('easy_api', 'Easy api post call %type failed because of an invalid form token.', array('%type' => $type), WATCHDOG_NOTICE);
+  }
+  // Process the form data with custom functions built as needed
+  elseif ($type) {
+    // Include proper file
+    include('post/' . $type . '.inc');
+    $content = module_invoke('easy_api', 'easy_api_post_' . $type);
+  }
+
+  return drupal_json($content);
+}
